@@ -1,0 +1,9 @@
+#cloud-config
+hostname: labvm
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDE7DZB17Rzbm+VrujZtakhmw8LJBYjHNLgOqYi/Igt8 nikolay@nikolay-VMware-Virtual-Platform
+ssh_pwauth: false
