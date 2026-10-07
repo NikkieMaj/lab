@@ -1,0 +1,55 @@
+- name: Deploy lab app to labvm
+  hosts: labvm
+  become: true
+  tasks:
+    - name: Install Docker and Compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+          - python3-docker
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure Docker is running and enabled
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add ubuntu to docker group
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Create app directory
+      ansible.builtin.file:
+        path: /opt/lab
+        state: directory
+        owner: ubuntu
+        mode: "0755"
+
+    - name: Copy compose file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../compose.yaml"
+        dest: /opt/lab/compose.yaml
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Copy backend and frontend sources
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../{{ item }}/"
+        dest: "/opt/lab/{{ item }}/"
+        owner: ubuntu
+      loop:
+        - backend
+        - frontend
+      register: sources
+
+    - name: Start Compose project
+      community.docker.docker_compose_v2:
+        project_src: /opt/lab
+        build: "{{ 'always' if sources.changed else 'policy' }}"
+        state: present
