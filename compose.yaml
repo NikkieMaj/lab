@@ -1,0 +1,14 @@
+services:
+  backend:
+    build: ./backend
+    image: lab-backend:1.0
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: lab-frontend:1.0
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

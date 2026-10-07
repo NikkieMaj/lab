@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Лаба: Compose + KVM + Ansible</title>
+</head>
+<body>
+  <h1>Фронтенд работает</h1>
+  <p id="out">Загрузка данных от бэкенда...</p>
+  <script>
+    fetch("/api/hello")
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById("out").textContent =
+          d.message + " (контейнер: " + d.host + ", время: " + d.time + ")";
+      })
+      .catch(e => {
+        document.getElementById("out").textContent = "Ошибка: " + e;
+      });
+  </script>
+</body>
+</html>
