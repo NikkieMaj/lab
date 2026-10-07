@@ -1,0 +1,48 @@
+name: Trivy scan
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build images from compose.yaml
+        run: docker compose build
+
+      - name: Pull remaining images
+        run: docker compose pull --ignore-buildable || true
+
+      - name: List images used by Compose
+        run: |
+          docker compose config --images | sort -u | tee images.txt
+
+      - name: Scan images with Trivy
+        run: |
+          echo "# Trivy scan results" >> "$GITHUB_STEP_SUMMARY"
+          while read -r img; do
+            [ -z "$img" ] && continue
+            echo "::group::Trivy: $img"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:latest image \
+              --severity HIGH,CRITICAL \
+              --exit-code 0 \
+              --format table \
+              "$img" | tee scan.txt
+            echo "::endgroup::"
+            {
+              echo "## $img"
+              echo '```'
+              cat scan.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          done < images.txt
